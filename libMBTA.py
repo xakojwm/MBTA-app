@@ -6,6 +6,25 @@ MBTA_BASE_URL = "https://api-v3.mbta.com"
 # Routes to search (Red Line + all Green Line branches)
 ROUTE_IDS = ["Red", "Green-B", "Green-C", "Green-D", "Green-E"]
 
+def res_string_formatter( info, direction_name, station_name ):
+    if info:
+        s = f"{station_name}, {direction_name}: Next {info['route_id']} Line train departs at {info['time'].strftime('%I:%M')}"
+    else:
+        s = f"{station_name}, {direction_name}: No upcoming departures found."
+
+    return s
+
+def normalize_text_lengths( lines_dicts ):
+    max_text_len = 0
+    for line in lines_dicts:
+        print(line)
+        max_text_len = max(max_text_len, len(line['text']))
+
+    for line in lines_dicts:
+        line['text'] = line['text'] + ( ' ' * ( max_text_len - len(line['text'])))
+
+    return lines_dicts
+
 def find_stop_id_by_name(station_name,key):
     """
     Find the stop ID for a given station name by searching Red and Green Lines.
@@ -25,7 +44,7 @@ def find_stop_id_by_name(station_name,key):
     return None, None
 
 
-def get_next_trains(stop_id,key):
+def get_next_trains(stop_id, station_name, key):
     """
     Fetch the next inbound and outbound train departures for a given MBTA stop.
     """
@@ -71,13 +90,18 @@ def get_next_trains(stop_id,key):
             break
 
     res = []
-    # Print results
     for direction_id, direction_name in [(0, "Inbound"), (1, "Outbound")]:
         info = next_departures[direction_id]
         if info:
-            res.append(f"{direction_name}: Next {info['route_id']} Line train departs at "
-                  f"{info['time'].strftime('%I:%M:%S %p')} (Trip ID: {info['trip_id']})")
+            res.append({"route_id": info['route_id'], "text": res_string_formatter( info, direction_name, station_name ) })
         else:
-            res.append(f"{direction_name}: No upcoming departures found.")
+            res.append({"route_id": info['route_id'], "text": res_string_formatter( info, direction_name, station_name)})
     
+    # Add spaces to end of line text
+    res = normalize_text_lengths( res )
+
+    for m in res:
+        print(m)
+        print(len(m['text']))
+
     return res

@@ -3,15 +3,21 @@ from rgbmatrix import RGBMatrix, RGBMatrixOptions, graphics
 import time
 import os
 
-# Lines to scroll
-lines = [
-    "Line 1: Hello, World!",
-    "Line 2: Raspberry Pi",
-    "Line 3: LED Matrix",
-    "Line 4: 4 Rows of Text"
-]
+def create_colors_arr ( lines ):
+    colors = []
+    for line in lines:
+        print(line)
+        tmp_route_id = line.get('route_id').lower()
+        if "green" in tmp_route_id:
+            colors.append( graphics.Color(0, 0, 255) )
+        elif "red" in tmp_route_id:
+            colors.append( graphics.Color(255, 0, 0) )
+        else:
+            graphics.Color(0, 255, 0)
 
-def display_lines( lines, font_path="MBTA-app/rpi-rgb-led-matrix/fonts/6x10.bdf" ):
+    return colors
+
+def display_lines( lines, font_path="MBTA-app/rpi-rgb-led-matrix/fonts/4x6.bdf" ):
 
     # --- Configuration ---
     options = RGBMatrixOptions()
@@ -31,39 +37,35 @@ def display_lines( lines, font_path="MBTA-app/rpi-rgb-led-matrix/fonts/6x10.bdf"
     font.LoadFont(font_path)  # adjust path
 
     # Text colors
-    colors = [
-        graphics.Color(255, 0, 0),
-        graphics.Color(0, 255, 0),
-        graphics.Color(0, 0, 255),
-        graphics.Color(255, 255, 0)
-    ]
+    colors = create_colors_arr( lines )
 
     # Starting y positions
-    start_y = 10
+    start_y = 6
     line_spacing = 8
 
     # Initialize x positions for scrolling (start at right edge)
-    x_positions = [canvas.width for _ in lines]
+    x_pos = canvas.width
 
-    scroll_speed = 1  # pixels per frame
+    scroll_speed = 0.2  # pixels per frame (lower = slower)
+    frame_delay = 0.03   # seconds between frames
 
     try:
         while True:
             canvas.Clear()
-            for i, text in enumerate(lines):
+            for i, line_dict in enumerate(lines):
                 # Draw text at current x position
-                graphics.DrawText(canvas, font, x_positions[i], start_y + i * line_spacing, colors[i % len(colors)], text)
+                graphics.DrawText(canvas, font, x_pos, start_y + i * line_spacing, colors[i % len(colors)], line_dict['text'])
                 
                 # Update x position for scrolling left
-                x_positions[i] -= scroll_speed
+                x_pos -= scroll_speed
                 
                 # Reset to right side when completely off-screen
-                text_width = graphics.DrawText(canvas, font, 0, 0, colors[i], text)  # width in pixels
-                if x_positions[i] < -text_width:
-                    x_positions[i] = canvas.width
+                text_width = graphics.DrawText(canvas, font, 0, 0, colors[i], line_dict['text'])  # width in pixels
+                if x_pos < -text_width:
+                    x_pos = canvas.width
 
             canvas = matrix.SwapOnVSync(canvas)
-            time.sleep(0.03)
+            time.sleep(frame_delay)
 
     except KeyboardInterrupt:
         print("\nExiting and clearing display.")

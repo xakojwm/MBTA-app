@@ -45,8 +45,7 @@ def main():
         print(f"Could not find a stop matching '{station_name}' on the Red or Green Line.")
         return
 
-    print(f"Found stop ID: {stop_id} (Route: {route_id})")
-    res = libMBTA.get_next_trains(stop_id, station_name, key)
+    res = libMBTA.get_next_trains(stop_id, station_name, route_id, key)
 
     station_name = input("Enter MBTA station name (e.g. 'Kendall', 'Park Street', 'Copley'): ").strip()
     stop_id, route_id = libMBTA.find_stop_id_by_name(station_name, key)
@@ -55,8 +54,7 @@ def main():
         print(f"Could not find a stop matching '{station_name}' on the Red or Green Line.")
         return
 
-    print(f"Found stop ID: {stop_id} (Route: {route_id})")
-    res += libMBTA.get_next_trains(stop_id, station_name, key)
+    res += libMBTA.get_next_trains(stop_id, station_name, route_id, key)
 
     display_mbta_lines.display_lines(res)
 
